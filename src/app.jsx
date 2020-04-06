@@ -1,9 +1,10 @@
-import React from 'react';
+import React from 'react'
+import { Container } from '@material-ui/core'
 
 const App = () => (
-    <div className="container">
-        <h1>Hello World, Reat!</h1>
-    </div>
+    <Container maxWidth="sm">
+            <h1>Hello World, Reat!</h1>
+    </Container>
 )
 
-export default App;
+export default App
