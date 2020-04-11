@@ -1,10 +1,27 @@
 import React from 'react'
-import { Container } from '@material-ui/core'
+import { Container, Button } from '@material-ui/core'
+import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom'
+import './app.css'
+import Home from './components/home'
 
 const App = () => (
-  <Container maxWidth="sm">
-    <h1>Hello World, Reat!</h1>
-  </Container>
+  <Router>
+    <Container maxWidth="sm">
+      <nav>
+        <Link className={'nav-button'} to="/">
+          <Button>lol</Button>
+        </Link>
+        <Link className={'nav-button'} to="about">
+          About
+        </Link>
+      </nav>
+
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/about" component={Home} />
+      </Switch>
+    </Container>
+  </Router>
 )
 
 export default App
