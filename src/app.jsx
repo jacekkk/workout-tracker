@@ -9,16 +9,12 @@ const App = () => (
     <Container maxWidth="sm">
       <nav>
         <Link className={'nav-button'} to="/">
-          <Button>lol</Button>
-        </Link>
-        <Link className={'nav-button'} to="about">
-          About
+          <Button>Home</Button>
         </Link>
       </nav>
 
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/about" component={Home} />
       </Switch>
     </Container>
   </Router>
