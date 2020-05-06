@@ -9,7 +9,7 @@ import {
   ListItemSecondaryAction,
   InputBase,
 } from '@material-ui/core'
-import { ExpandLess, ExpandMore } from '@material-ui/icons'
+import { ExpandLess, ExpandMore, Add } from '@material-ui/icons'
 import { firestore } from '../db/firebase'
 import { auth } from '../db/firebase'
 import { makeStyles } from '@material-ui/core/styles'
@@ -53,9 +53,7 @@ const Home = () => {
       })
   }, [])
 
-  const handleNewListClick = (e) => {
-    e.preventDefault()
-
+  const handleNewListClick = () => {
     firestore
       .collection('shopping_lists')
       .add({
@@ -96,15 +94,16 @@ const Home = () => {
 }
 
 const ShoppingList = ({ id, categories: categoriesProp }) => {
-  const [categories, setCategories] = useState(categoriesProp)
   const classes = useStyles()
+  const [categories, setCategories] = useState(categoriesProp)
 
-  const handleAddCategoryClick = (e) => {
-    e.preventDefault()
+  const handleAddCategoryClick = () => {
+    const newCategoryKey = Date.now()
 
     const newCategory = {
-      name: {
+      [newCategoryKey]: {
         items: [],
+        name: 'name',
       },
     }
 
@@ -112,12 +111,11 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
       .collection('shopping_lists')
       .doc(id)
       .update({
-        categories: categories,
+        categories: { ...categories, ...newCategory },
       })
       .then(() => {
-        setCategories({ ...categories, ...newCategory })
-
         console.log('Document successfully updated!')
+        setCategories({ ...categories, ...newCategory })
       })
       .catch((error) => {
         console.error('Error updating document: ', error)
@@ -131,22 +129,19 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
           <Category
             key={index}
             listId={id}
-            name={category}
+            categoryId={category}
+            name={categories[category].name}
             items={categories[category].items}
           ></Category>
         ))}
-      <Button
-        className={classes.button}
-        variant="outlined"
-        onClick={handleAddCategoryClick}
-      >
-        Add Category
+      <Button onClick={handleAddCategoryClick}>
+        <Add /> category
       </Button>
     </List>
   )
 }
 
-const Category = ({ listId, name: nameProp, items: itemsProp }) => {
+const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
   const [name, setName] = useState(nameProp)
   const [items, setItems] = useState(itemsProp)
   const [open, setOpen] = useState(true)
@@ -184,7 +179,7 @@ const Category = ({ listId, name: nameProp, items: itemsProp }) => {
       .collection('shopping_lists')
       .doc(listId)
       .update({
-        [`categories.${name}.items`]: reorderedItems,
+        [`categories.${categoryId}.items`]: reorderedItems,
       })
       .then(() => {
         console.log('Document successfully updated!')
@@ -194,36 +189,56 @@ const Category = ({ listId, name: nameProp, items: itemsProp }) => {
       })
   }
 
-  const handleToggle = (e, item, index) => {
-    const newItems = [...items]
+  const handleCheckboxToggle = (e, item, index) => {
+    let newItems = [...items]
     newItems[index] = {
       name: item.name,
       checked: e.target.checked,
     }
 
-    setItems(newItems)
-
     firestore
       .collection('shopping_lists')
       .doc(listId)
       .update({
-        [`categories.${name}.items`]: newItems,
+        [`categories.${categoryId}.items`]: newItems,
       })
       .then(() => {
         console.log('Document successfully updated!')
+        setItems(newItems)
       })
       .catch((error) => {
         console.error('Error updating document: ', error)
       })
   }
 
-  const handleClick = () => {
+  const handleDropdownToggle = () => {
     setOpen(!open)
   }
 
-  // TODO make category name a property of category object rather than it's key? and randomly generate the key
-  const updateCategoryName = (e) => {
-    e.preventDefault()
+  const updateCategoryName = () => {
+    console.log('TODO')
+  }
+
+  const handleAddItem = () => {
+    let newItems = [...items]
+    newItems.push({
+      name: 'name',
+      checked: false,
+    })
+
+    firestore
+      .collection('shopping_lists')
+      .doc(listId)
+      .update({
+        [`categories.${categoryId}.items`]: newItems,
+      })
+      .then(() => {
+        console.log('Document successfully updated!')
+        setItems(newItems)
+      })
+      .catch((error) => {
+        console.error('Error updating document: ', error)
+      })
   }
 
   // TODO add pencil edit icon button or update as user types?
@@ -231,11 +246,11 @@ const Category = ({ listId, name: nameProp, items: itemsProp }) => {
     <Fragment>
       <ListItem>
         <InputBase
-          id={name}
+          id={`category-${categoryId}`}
           onChange={updateCategoryName}
           defaultValue={name}
         />
-        <ListItemSecondaryAction onClick={handleClick}>
+        <ListItemSecondaryAction onClick={handleDropdownToggle}>
           {open ? <ExpandLess /> : <ExpandMore />}
         </ListItemSecondaryAction>
       </ListItem>
@@ -244,43 +259,48 @@ const Category = ({ listId, name: nameProp, items: itemsProp }) => {
           <Droppable droppableId="droppable">
             {(provided, snapshot) => (
               <List dense {...provided.droppableProps} ref={provided.innerRef}>
-                {items.map((item, index) => {
-                  const labelId = `checkbox-list-secondary-label-${item.name}`
-                  return (
-                    <Draggable
-                      key={item.name}
-                      draggableId={item.name}
-                      index={index}
-                    >
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={getItemStyle(
-                            snapshot.isDragging,
-                            provided.draggableProps.style
-                          )}
-                        >
-                          <ListItem key={index}>
-                            <InputBase id={labelId} defaultValue={item.name} />
-                            <ListItemSecondaryAction>
-                              <Checkbox
-                                edge="end"
-                                onChange={(e) => handleToggle(e, item, index)}
-                                checked={item.checked}
-                                inputProps={{
-                                  'aria-labelledby': item.name,
-                                }}
-                              />
-                            </ListItemSecondaryAction>
-                          </ListItem>
-                        </div>
-                      )}
-                    </Draggable>
-                  )
-                })}
+                {items.map((item, index) => (
+                  <Draggable
+                    key={`${index}-${item.name}`}
+                    draggableId={`${index}-${item.name}`}
+                    index={index}
+                  >
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={getItemStyle(
+                          snapshot.isDragging,
+                          provided.draggableProps.style
+                        )}
+                      >
+                        <ListItem key={index}>
+                          <InputBase
+                            id={`item-${item.name}`}
+                            defaultValue={item.name}
+                          />
+                          <ListItemSecondaryAction>
+                            <Checkbox
+                              edge="end"
+                              onChange={(e) =>
+                                handleCheckboxToggle(e, item, index)
+                              }
+                              checked={item.checked}
+                              inputProps={{
+                                'aria-labelledby': item.name,
+                              }}
+                            />
+                          </ListItemSecondaryAction>
+                        </ListItem>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
                 {provided.placeholder}
+                <ListItem button onClick={handleAddItem}>
+                  <Add /> item
+                </ListItem>
               </List>
             )}
           </Droppable>
