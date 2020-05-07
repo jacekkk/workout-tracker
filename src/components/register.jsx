@@ -37,7 +37,7 @@ const Register = () => {
     }
   })
 
-  const handleSubmit = (e) => {
+  const onSubmit = (e) => {
     e.preventDefault()
 
     auth
@@ -96,7 +96,7 @@ const Register = () => {
       className={classes.root}
       noValidate
       autoComplete="off"
-      onSubmit={handleSubmit}
+      onSubmit={onSubmit}
     >
       <div>{firebaseError}</div>
       <TextField
