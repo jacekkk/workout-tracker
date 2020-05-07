@@ -1,8 +1,8 @@
 {
-  "name": "workout-tracker",
+  "name": "shopping-assistant",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "https://github.com/jacekkk/workout-tracker",
+  "repository": "https://github.com/jacekkk/shopping-assistant",
   "author": "Jacek Budzynski",
   "license": "MIT",
   "private": true,
