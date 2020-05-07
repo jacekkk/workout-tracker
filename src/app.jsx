@@ -1,6 +1,12 @@
 import React, { Fragment, useState } from 'react'
 import PropTypes from 'prop-types'
-import { Container, Button } from '@material-ui/core'
+import {
+  Container,
+  Button,
+  createMuiTheme,
+  CssBaseline,
+} from '@material-ui/core'
+import { ThemeProvider } from '@material-ui/styles'
 import {
   BrowserRouter as Router,
   Switch,
@@ -11,6 +17,12 @@ import {
 import './app.css'
 import { Home, Login, Register } from './components'
 import { auth } from './db/firebase'
+
+const theme = createMuiTheme({
+  palette: {
+    type: 'dark',
+  },
+})
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState()
@@ -29,38 +41,41 @@ const App = () => {
 
   return (
     <Router>
-      <Container maxWidth="sm">
-        <nav>
-          {isAuthenticated ? (
-            <Fragment>
-              <Link className={'nav-button'} to="/">
-                <Button>Home</Button>
-                <Button onClick={() => auth.signOut()}>Logout</Button>
-              </Link>
-            </Fragment>
-          ) : (
-            <Fragment>
-              <Link className={'nav-button'} to="/login">
-                <Button>Login</Button>
-              </Link>
-              <Link className={'nav-button'} to="/register">
-                <Button>Register</Button>
-              </Link>
-            </Fragment>
-          )}
-        </nav>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="sm">
+          <nav>
+            {isAuthenticated ? (
+              <Fragment>
+                <Link className={'nav-button'} to="/">
+                  <Button>Home</Button>
+                  <Button onClick={() => auth.signOut()}>Logout</Button>
+                </Link>
+              </Fragment>
+            ) : (
+              <Fragment>
+                <Link className={'nav-button'} to="/login">
+                  <Button>Login</Button>
+                </Link>
+                <Link className={'nav-button'} to="/register">
+                  <Button>Register</Button>
+                </Link>
+              </Fragment>
+            )}
+          </nav>
 
-        <Switch>
-          <Route path="/login" component={Login} />
-          <Route path="/register" component={Register} />
-          <PrivateRoute
-            exact
-            path="/"
-            component={Home}
-            authenticated={isAuthenticated}
-          />
-        </Switch>
-      </Container>
+          <Switch>
+            <Route path="/login" component={Login} />
+            <Route path="/register" component={Register} />
+            <PrivateRoute
+              exact
+              path="/"
+              component={Home}
+              authenticated={isAuthenticated}
+            />
+          </Switch>
+        </Container>
+      </ThemeProvider>
     </Router>
   )
 }
