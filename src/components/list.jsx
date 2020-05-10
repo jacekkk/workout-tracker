@@ -31,25 +31,33 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
     const newCategoryKey = Date.now()
 
     const newCategory = {
-      [newCategoryKey]: {
-        items: [],
-        name: 'name',
-      },
+      items: [],
+      name: 'name',
     }
 
     firestore
       .collection('shopping_lists')
       .doc(id)
       .update({
-        categories: { ...categories, ...newCategory },
+        [`categories.${newCategoryKey}`]: { ...newCategory },
       })
       .then(() => {
         console.log('Document successfully updated!')
-        setCategories({ ...categories, ...newCategory })
+        setCategories({ ...categories, [newCategoryKey]: { ...newCategory } })
       })
       .catch((error) => {
         console.error('Error updating document: ', error)
       })
+  }
+
+  const onUpdate = ({ categoryId, name, items }) => {
+    const newCategories = { ...categories }
+    newCategories[categoryId] = {
+      name,
+      items,
+    }
+
+    setCategories({ ...newCategories })
   }
 
   return (
@@ -62,6 +70,7 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
             categoryId={category}
             name={categories[category].name}
             items={categories[category].items}
+            updateParentState={(category) => onUpdate(category)}
           ></Category>
         ))}
       <Button onClick={onAddCategory}>

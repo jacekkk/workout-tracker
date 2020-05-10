@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import {
   Checkbox,
   List,
@@ -22,12 +22,49 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
+const Category = ({
+  listId,
+  categoryId,
+  name: nameProp,
+  items: itemsProp,
+  updateParentState,
+}) => {
   const classes = useStyles()
   const [name, setName] = useState(nameProp)
   const [items, setItems] = useState(itemsProp)
   const [open, setOpen] = useState(true)
-  console.log('ITEMS', items)
+
+  useEffect(() => {
+    firestore
+      .collection('shopping_lists')
+      .doc(listId)
+      .update({
+        [`categories.${categoryId}.items`]: items,
+      })
+      .then(() => {
+        console.log('Document successfully updated!')
+        updateParentState({ categoryId, name, items })
+      })
+      .catch((error) => {
+        console.error('Error updating document: ', error)
+      })
+  }, [items])
+
+  useEffect(() => {
+    firestore
+      .collection('shopping_lists')
+      .doc(listId)
+      .update({
+        [`categories.${categoryId}.name`]: name,
+      })
+      .then(() => {
+        console.log('Document successfully updated!')
+        updateParentState({ categoryId, name, items })
+      })
+      .catch((error) => {
+        console.error('Error updating document: ', error)
+      })
+  }, [name])
 
   const getItemStyle = (isDragging, draggableStyle) => ({
     margin: `0 0 6px 0`,
@@ -57,19 +94,6 @@ const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
     )
 
     setItems(reorderedItems)
-
-    firestore
-      .collection('shopping_lists')
-      .doc(listId)
-      .update({
-        [`categories.${categoryId}.items`]: reorderedItems,
-      })
-      .then(() => {
-        console.log('Document successfully updated!')
-      })
-      .catch((error) => {
-        console.error('Error updating document: ', error)
-      })
   }
 
   const onCheckboxToggle = (e, item, index) => {
@@ -79,38 +103,7 @@ const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
       checked: e.target.checked,
     }
 
-    firestore
-      .collection('shopping_lists')
-      .doc(listId)
-      .update({
-        [`categories.${categoryId}.items`]: newItems,
-      })
-      .then(() => {
-        console.log('Document successfully updated!')
-        setItems(newItems)
-      })
-      .catch((error) => {
-        console.error('Error updating document: ', error)
-      })
-  }
-
-  const onUpdateCategoryName = (e) => {
-    let newName = e.target.value
-    console.log(e.target.value)
-
-    firestore
-      .collection('shopping_lists')
-      .doc(listId)
-      .update({
-        [`categories.${categoryId}.name`]: newName,
-      })
-      .then(() => {
-        console.log('Document successfully updated!')
-        setName(newName)
-      })
-      .catch((error) => {
-        console.error('Error updating document: ', error)
-      })
+    setItems(newItems)
   }
 
   const onUpdateItemName = (e, item, index) => {
@@ -120,43 +113,17 @@ const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
       checked: item.checked,
     }
 
-    firestore
-      .collection('shopping_lists')
-      .doc(listId)
-      .update({
-        [`categories.${categoryId}.items`]: newItems,
-      })
-      .then(() => {
-        console.log('Document successfully updated!')
-        setItems(newItems)
-      })
-      .catch((error) => {
-        console.error('Error updating document: ', error)
-      })
+    setItems(newItems)
   }
 
   const onAddItem = () => {
     let newItems = [...items]
-    console.log(newItems)
     newItems.push({
       name: 'name',
       checked: false,
     })
-    console.log(newItems)
 
-    firestore
-      .collection('shopping_lists')
-      .doc(listId)
-      .update({
-        [`categories.${categoryId}.items`]: newItems,
-      })
-      .then(() => {
-        console.log('Document successfully updated!')
-        setItems(newItems)
-      })
-      .catch((error) => {
-        console.error('Error updating document: ', error)
-      })
+    setItems(newItems)
   }
 
   return (
@@ -164,7 +131,7 @@ const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
       <ListItem>
         <InputBase
           id={`category-${categoryId}`}
-          onChange={onUpdateCategoryName}
+          onBlur={(e) => setName(e.target.value)}
           defaultValue={name}
         />
         <ListItemSecondaryAction onClick={() => setOpen(!open)}>
@@ -199,9 +166,7 @@ const Category = ({ listId, categoryId, name: nameProp, items: itemsProp }) => {
                               <InputBase
                                 id={`item-${item.name}`}
                                 defaultValue={item.name}
-                                onChange={(e) =>
-                                  onUpdateItemName(e, item, index)
-                                }
+                                onBlur={(e) => onUpdateItemName(e, item, index)}
                               />
                               <ListItemSecondaryAction>
                                 <Checkbox
