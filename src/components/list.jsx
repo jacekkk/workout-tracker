@@ -4,6 +4,7 @@ import { Add } from '@material-ui/icons'
 import { firestore } from '../db/firebase'
 import { makeStyles } from '@material-ui/core/styles'
 import { Category } from './'
+import firebase from 'firebase'
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -13,13 +14,17 @@ const useStyles = makeStyles((theme) => ({
     margin: theme.spacing(1),
   },
   icon: {
-    fontSize: 'small',
     marginRight: theme.spacing(1),
   },
   addCategoryText: {
     fontSize: '1rem',
     textTransform: 'lowercase',
     fontWeight: 400,
+  },
+  button: {
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'left',
   },
 }))
 
@@ -32,7 +37,7 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
 
     const newCategory = {
       items: [],
-      name: 'name',
+      name: '',
     }
 
     firestore
@@ -60,20 +65,40 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
     setCategories({ ...newCategories })
   }
 
+  const onDeleteCategory = (categoryId) => {
+    firestore
+      .collection('shopping_lists')
+      .doc(id)
+      .update({
+        [`categories.${categoryId}`]: firebase.firestore.FieldValue.delete(),
+      })
+      .then(() => {
+        console.log('Category successfully deleted!')
+        const newCategories = { ...categories }
+        delete newCategories[categoryId]
+
+        setCategories(newCategories)
+      })
+      .catch((error) => {
+        console.error('Error updating document: ', error)
+      })
+  }
+
   return (
     <List dense className={classes.root}>
       {categories &&
-        Object.keys(categories).map((category, index) => (
+        Object.keys(categories).map((categoryId, index) => (
           <Category
             key={index}
             listId={id}
-            categoryId={category}
-            name={categories[category].name}
-            items={categories[category].items}
-            updateParentState={(category) => onUpdate(category)}
-          ></Category>
+            categoryId={categoryId}
+            name={categories[categoryId].name}
+            items={categories[categoryId].items}
+            updateShoppingList={(updatedCategory) => onUpdate(updatedCategory)}
+            onDeleteCategory={() => onDeleteCategory(categoryId)}
+          />
         ))}
-      <Button onClick={onAddCategory}>
+      <Button className={classes.button} onClick={onAddCategory}>
         <Add className={classes.icon} />
         <span className={classes.addCategoryText}>category</span>
       </Button>
