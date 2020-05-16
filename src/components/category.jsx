@@ -1,33 +1,56 @@
 import React, { Fragment, useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
 import {
   Checkbox,
   List,
   ListItem,
   Collapse,
   ListItemSecondaryAction,
+  IconButton,
   InputBase,
 } from '@material-ui/core'
-import { ExpandLess, ExpandMore, Add, DragIndicator } from '@material-ui/icons'
+import {
+  ExpandLess,
+  ExpandMore,
+  Add,
+  DragIndicator,
+  Delete,
+} from '@material-ui/icons'
 import { firestore } from '../db/firebase'
 import { makeStyles } from '@material-ui/core/styles'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd'
 
 const useStyles = makeStyles((theme) => ({
-  icon: {
-    fontSize: 'small',
+  iconStart: {
+    fontSize: 'medium',
+    padding: '6px',
     marginRight: theme.spacing(1),
   },
-  addItemText: {
-    fontSize: '1rem',
+  iconEnd: {
+    fontSize: 'medium',
+    padding: '6px',
+  },
+  item: {
+    paddingLeft: theme.spacing(1),
   },
 }))
+
+Category.propTypes = {
+  listId: PropTypes.string.isRequired,
+  categoryId: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  items: PropTypes.array.isRequired,
+  updateShoppingList: PropTypes.func.isRequired,
+  onDeleteCategory: PropTypes.func.isRequired,
+}
 
 const Category = ({
   listId,
   categoryId,
   name: nameProp,
   items: itemsProp,
-  updateParentState,
+  updateShoppingList,
+  onDeleteCategory,
 }) => {
   const classes = useStyles()
   const [name, setName] = useState(nameProp)
@@ -42,8 +65,8 @@ const Category = ({
         [`categories.${categoryId}.items`]: items,
       })
       .then(() => {
-        console.log('Document successfully updated!')
-        updateParentState({ categoryId, name, items })
+        console.log('Document successfully updated (items in category)!')
+        updateShoppingList({ categoryId, name, items })
       })
       .catch((error) => {
         console.error('Error updating document: ', error)
@@ -58,8 +81,8 @@ const Category = ({
         [`categories.${categoryId}.name`]: name,
       })
       .then(() => {
-        console.log('Document successfully updated!')
-        updateParentState({ categoryId, name, items })
+        console.log('Document successfully updated (name in category)!')
+        updateShoppingList({ categoryId, name, items })
       })
       .catch((error) => {
         console.error('Error updating document: ', error)
@@ -119,7 +142,7 @@ const Category = ({
   const onAddItem = () => {
     let newItems = [...items]
     newItems.push({
-      name: 'name',
+      name: '',
       checked: false,
     })
 
@@ -129,13 +152,27 @@ const Category = ({
   return (
     <Fragment>
       <ListItem>
+        <IconButton
+          edge="start"
+          aria-label="delete"
+          onClick={onDeleteCategory}
+          className={classes.iconStart}
+        >
+          <Delete />
+        </IconButton>
         <InputBase
           id={`category-${categoryId}`}
           onBlur={(e) => setName(e.target.value)}
           defaultValue={name}
         />
         <ListItemSecondaryAction onClick={() => setOpen(!open)}>
-          {open ? <ExpandLess /> : <ExpandMore />}
+          <IconButton
+            edge="end"
+            aria-label="expand"
+            className={classes.iconEnd}
+          >
+            {open ? <ExpandLess /> : <ExpandMore />}
+          </IconButton>
         </ListItemSecondaryAction>
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
@@ -162,24 +199,34 @@ const Category = ({
                             )}
                           >
                             <ListItem key={index}>
-                              <DragIndicator className={classes.icon} />
-                              <InputBase
-                                id={`item-${item.name}`}
-                                defaultValue={item.name}
-                                onBlur={(e) => onUpdateItemName(e, item, index)}
-                              />
-                              <ListItemSecondaryAction>
-                                <Checkbox
-                                  edge="end"
-                                  onChange={(e) =>
-                                    onCheckboxToggle(e, item, index)
+                              <div className={classes.item}>
+                                <IconButton
+                                  edge="start"
+                                  aria-label="drag"
+                                  className={classes.iconStart}
+                                >
+                                  <DragIndicator />
+                                </IconButton>
+                                <InputBase
+                                  id={`item-${item.name}`}
+                                  defaultValue={item.name}
+                                  onBlur={(e) =>
+                                    onUpdateItemName(e, item, index)
                                   }
-                                  checked={item.checked}
-                                  inputProps={{
-                                    'aria-labelledby': item.name,
-                                  }}
                                 />
-                              </ListItemSecondaryAction>
+                                <ListItemSecondaryAction>
+                                  <Checkbox
+                                    edge="end"
+                                    onChange={(e) =>
+                                      onCheckboxToggle(e, item, index)
+                                    }
+                                    checked={item.checked}
+                                    inputProps={{
+                                      'aria-labelledby': item.name,
+                                    }}
+                                  />
+                                </ListItemSecondaryAction>
+                              </div>
                             </ListItem>
                           </div>
                         )}
@@ -188,8 +235,7 @@ const Category = ({
                 )}
                 {provided.placeholder}
                 <ListItem button onClick={onAddItem}>
-                  <Add className={classes.icon} />
-                  <span className={classes.addItemText}>item</span>
+                  <Add />
                 </ListItem>
               </List>
             )}
