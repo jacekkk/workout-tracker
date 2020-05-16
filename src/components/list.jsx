@@ -29,11 +29,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-ShoppingList.propTypes = {
-  id: PropTypes.string.isRequired,
-  categories: PropTypes.object.isRequired,
-}
-
 const ShoppingList = ({ id, categories: categoriesProp }) => {
   const classes = useStyles()
   const [categories, setCategories] = useState(categoriesProp)
@@ -111,6 +106,11 @@ const ShoppingList = ({ id, categories: categoriesProp }) => {
       </Button>
     </List>
   )
+}
+
+ShoppingList.propTypes = {
+  id: PropTypes.string.isRequired,
+  categories: PropTypes.object.isRequired,
 }
 
 export default ShoppingList

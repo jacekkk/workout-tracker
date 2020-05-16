@@ -35,15 +35,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }))
 
-Category.propTypes = {
-  listId: PropTypes.string.isRequired,
-  categoryId: PropTypes.string.isRequired,
-  name: PropTypes.string.isRequired,
-  items: PropTypes.array.isRequired,
-  updateShoppingList: PropTypes.func.isRequired,
-  onDeleteCategory: PropTypes.func.isRequired,
-}
-
 const Category = ({
   listId,
   categoryId,
@@ -244,6 +235,15 @@ const Category = ({
       </Collapse>
     </Fragment>
   )
+}
+
+Category.propTypes = {
+  listId: PropTypes.string.isRequired,
+  categoryId: PropTypes.string.isRequired,
+  name: PropTypes.string.isRequired,
+  items: PropTypes.array.isRequired,
+  updateShoppingList: PropTypes.func.isRequired,
+  onDeleteCategory: PropTypes.func.isRequired,
 }
 
 export default Category
